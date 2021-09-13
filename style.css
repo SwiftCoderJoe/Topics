@@ -1,8 +1,17 @@
 * {
     margin: 0;
-}
+    background: #e0e0e0;}
 
 canvas {
-    width: 800px;
-    height: 600px;
+    height: 85vh;
+    aspect-ratio: 1.777777;
+
+    filter: drop-shadow(40px 40px 60px #bebebe)
+            drop-shadow(-40px -40px 60px #ffffff);
+
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
