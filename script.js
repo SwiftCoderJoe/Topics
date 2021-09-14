@@ -41,7 +41,7 @@ window.addEventListener("load", (event) => {
 
     startColor = new Color(0, 255, 255, 1)
     endColor = new Color(255, 0, 255, 1)
-    drawVShape(0, 1200, 700, 0, 500, 1, 75, startColor, endColor)
+    drawVShape(0, 1200, 700, 0, 1000, 1, 75, startColor, endColor)
 
     // randomSpheres()
 
