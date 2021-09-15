@@ -34,22 +34,27 @@ window.addEventListener("load", (event) => {
 
     // MARK: Fill the screen
 
-
     startColor = new Color(255, 255, 0, 1)
     endColor = new Color(255, 0, 255, 1)
-    drawVShape(0, 1350, 75, 800, 120, 2, 100, startColor, endColor)
+    drawVShape(0, 1350, 75, 75, 120, 2, 100, 0, startColor, endColor)
+
+    startColor = new Color(0, 0, 0, 1)
+    endColor = new Color(0, 255, 255, 1)
+    drawVShape(150, 1250, 300, 300, 300, 2, 200, 0, startColor, endColor)
+
+    startColor = new Color(0, 0, 0, 0)
+    endColor = new Color(0, 255, 255, 1)
+    drawVShape(150, 1250, 600, 600, 300, 2, 200, 0, startColor, endColor)
 
     startColor = new Color(0, 255, 255, 1)
     endColor = new Color(255, 0, 255, 1)
-    drawVShape(0, 1200, 700, 0, 1000, 1, 75, startColor, endColor)
-
-    // randomSpheres()
+    drawVShape(0, 1200, 700, 0, 1000, 1, 75, 20, startColor, endColor)
 
 
     // MARK: Functions
 
     // This function signature is absolutely insane and should use more objects. javascriopt moment!!!
-    function drawVShape(x1, x2, y1, y2, res, width, length, startColor, endColor) {
+    function drawVShape(x1, x2, y1, y2, res, width, length, twistRate, startColor, endColor) {
         let xdiff = x2 - x1
         let ydiff = y2 - y1
 
@@ -71,13 +76,16 @@ window.addEventListener("load", (event) => {
             x = x1 + ratio * xdiff
             y = y1 + ratio * ydiff
 
+            // Modulate the angle that the angles come off the line (doesn't actually create realistic twists because of the angle)
+            let rad = 5 * Math.PI/4 + (Math.sin(ratio * twistRate) * Math.PI / 4)
+
             // First offset point next to the current point along the linear distribution
-            let offsetX1 = x - Math.sin(currentRad - 5 * Math.PI/4) * length
-            let offsetY1 = y - Math.cos(currentRad - 5 * Math.PI/4) * length
+            let offsetY1 = y - Math.cos(currentRad - rad) * length
+            let offsetX1 = x - Math.sin(currentRad - rad) * length
 
             // Second set of coordinates
-            let offsetX2 = x + Math.sin(currentRad + 5 * Math.PI/4) * length
-            let offsetY2 = y + Math.cos(currentRad + 5 * Math.PI/4) * length
+            let offsetX2 = x + Math.sin(currentRad + rad) * length
+            let offsetY2 = y + Math.cos(currentRad + rad) * length
 
             interface.strokeStyle = new Color(startColor.r + ratio * rdiff, startColor.g + ratio * gdiff, startColor.b + ratio * bdiff, startColor.a + ratio * adiff).string
             interface.lineWidth = width
