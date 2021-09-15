@@ -1,6 +1,21 @@
 * {
     margin: 0;
-    background: #e0e0e0;}
+    background: #e0e0e0;
+    text-align: center;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+
+    cursor: pointer;
+
+    font-size: 2vw;
+}
+
+div {
+    padding: 20px;
+}
 
 canvas {
     height: 85vh;
