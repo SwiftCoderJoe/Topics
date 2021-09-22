@@ -4,16 +4,16 @@
     text-align: center;
 }
 
-a {
-    text-decoration: none;
-    color: black;
+div.grid {
+    display: grid;
 
-    cursor: pointer;
+    height: 100%;
+    width: 100%;
 
-    font-size: 2vw;
+    grid: 10vw 1fr 10vw / 1fr 1fr 1fr;
 }
 
-div {
+div.left {
     padding: 20px;
 }
 

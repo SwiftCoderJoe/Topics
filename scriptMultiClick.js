@@ -27,21 +27,8 @@ window.addEventListener("load", (event) => {
     // Get the canvas interface (Context)
     let interface = canvas.getContext(`2d`)
 
-    // Hold the recent mouse position
-    let mousePos = new Coordinate(0, 0)
-    let lastMousePos = new Coordinate(0, 0)
-
-    // Hold recent clicks, of type [Coordinate]
+    // Hold the recent mouse events
     let mouseEvents = []
-
-    // If the mouse is pressed
-    let mousePressed = false
-
-    // If the screen should be slowly cleared by repeatedly drawing a transparent background
-    let slowClearScreenOn = false
-
-    // Drawing mode, of type DrawingMode (line or curve)
-    let drawingMode = DrawingMode.disabled
 
     // Scale the canvas so that the accessible portion is always 720p
     canvas.width = 1280
@@ -52,11 +39,7 @@ window.addEventListener("load", (event) => {
     interface.lineJoin = `round`
 
     // Lines are black
-    interface.strokeStyle = `rgb(0, 0, 0)`
     interface.fillStyle = `rgb(0, 0, 0)`
-
-    // Start updating the screen
-    setInterval(update, 1000/60)
 
     // MARK: Draw on the screen
 
@@ -64,50 +47,7 @@ window.addEventListener("load", (event) => {
 
     // MARK: Events
 
-    window.addEventListener(`keydown`, (ev) => {
-        switch (ev.key) {
-            case `s`:
-                slowClearScreenOn = !slowClearScreenOn
-                break
-
-            case `c`:
-                interface.fillStyle = new Color(224, 224, 224, 1).string
-                interface.fillRect(0, 0, canvas.width, canvas.height)
-                break
-
-            case `1`:
-                drawingMode = DrawingMode.disabled
-                mouseEvents = []
-                break
-
-            case `2`:
-                drawingMode = DrawingMode.pencil
-                mouseEvents = []
-                break
-
-            case `3`:
-                drawingMode = DrawingMode.lines
-                mouseEvents = []
-                break
-
-            case `4`:
-                drawingMode = DrawingMode.curves
-                mouseEvents = []
-                break
-            
-            case `5`:
-                drawingMode = DrawingMode.circles
-                mouseEvents = []
-
-            default:
-                break
-        }
-    })
-
-    // ClickInside event ends
     canvas.addEventListener(`mouseup`, (ev) => {
-        mousePressed = false
-
         let rect = canvas.getBoundingClientRect(), // abs. size of element
             scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for X
             scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for Y
@@ -118,67 +58,39 @@ window.addEventListener("load", (event) => {
         // Add mouse coordinates to the list
         mouseEvents.unshift(mouseCoords)
 
-        // If the user has clicked twice and has lines enabled draw a line
-        if (drawingMode == DrawingMode.lines && mouseEvents.length == 2) {
-
-            startColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
-            endColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
-            drawVShape(mouseEvents[0], mouseEvents[1], randomIn(800), 2, randomInRange(10, 30), 0, startColor, endColor)
-
-            mouseEvents = []
-
-        // If the user has clicked 3 times and has curves enableddraw a curve
-        } else if (drawingMode == DrawingMode.curves && mouseEvents.length == 3) {
-
-            color = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
-            drawCurve(mouseEvents[0], mouseEvents[1], mouseEvents[2], randomIn(200), color)
-
-            mouseEvents = []
-
-        }else {
-            // If the user has clicked only once or hasn't clicked, don't clear the recent clicks
-            return
-        }
-
-
+        // Remove last coordinate to limit length to 3
+        if (mouseEvents.length > 3) mouseEvents.pop()        
     })
 
-    // ClickInside event starts
-    window.addEventListener(`mousedown`, (ev) => {
-        mousePressed = true
-    })
+    window.addEventListener(`keydown`, (ev) => {
+        // If the key is a space
+        if (ev.key == ` `) {
+            if (mouseEvents.length == 3) {
 
-    window.addEventListener(`mousemove`, (ev) => {
-        let rect = canvas.getBoundingClientRect(), // abs. size of element
-        scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for X
-        scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for Y
-      
-        previousMousePos = mousePos
-        mousePos = new Coordinate((ev.clientX - rect.left) * scaleX,
-                                  (ev.clientY - rect.top) * scaleY) 
+                // If the user has clicked 3 times draw a curve
+                color = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
+                drawCurve(mouseEvents[0], mouseEvents[1], mouseEvents[2], randomIn(200), color)
 
-        if (drawingMode == DrawingMode.pencil && mousePressed) {
-            interface.beginPath()
-            interface.moveTo(previousMousePos.x, previousMousePos.y)
-            interface.lineTo(mousePos.x, mousePos.y)
-            interface.stroke()
+            } else if (mouseEvents.length == 2) {
+                
+                // If the user has clicked twice draw a line
+                startColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
+                endColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
+                drawVShape(mouseEvents[0], mouseEvents[1], randomIn(800), 2, randomInRange(10, 30), 0, startColor, endColor)
+
+            } else {
+                // If the user has clicked only once or hasn't clicked, don't clear the recent clicks
+                return
+            }
+
+            // CLear the recent clicks
+            mouseEvents = []
+
         }
+
     })
 
     // MARK: Functions
-
-    function update() {
-
-        if (slowClearScreenOn) {
-            slowClearScreen()
-        }
-        
-    }
-
-    function slowClearScreen() {
-        interface.fillStyle = new Color(224, 224, 224, 0.02).string
-        interface.fillRect(0, 0, canvas.width, canvas.height)
-    }
 
     function drawCurve(corner1, middle, corner2, res, color) {
 
@@ -245,6 +157,20 @@ window.addEventListener("load", (event) => {
         }
     }
 
+    function randomSpheres() {
+        for (let i = 0; i < 70; i++) {
+            // string function wtf
+            interface.fillStyle = `rgba(${randomIn(255)}, ${randomIn(255)}, ${randomIn(255)}, 0.5)`
+    
+            let x = randomIn(canvas.width)
+            let y = randomIn(canvas.height)
+    
+            interface.beginPath()
+            interface.arc(x, y, randomIn(100), 0, Math.PI * 2)
+            interface.fill()
+        }
+    }
+
 })
 
 function randomIn(x) {
@@ -254,15 +180,6 @@ function randomIn(x) {
 // should not be diff name smh, this is a true javascript moment (how could you possibly have convinience initializers without???)
 function randomInRange(y, x) {
     return Math.floor(Math.random() * ((x - y) + 1)) + y
-}
-
-// This is a javascript enum moment!
-const DrawingMode = {
-    disabled: `Disabled`,
-    pencil: `Pencil`,
-    lines: `Lines`,
-    curves: `Curves`,
-    circles: `Circles`
 }
 
 
