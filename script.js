@@ -19,10 +19,16 @@ class Coordinate {
     }
 }
 
-window.addEventListener("load", (event) => {
+window.addEventListener("load", () => {
 
     // Get a reference to the canvas
-    let canvas = document.getElementById("mainCanvas")
+    let canvas = document.getElementById("canvas")
+
+    // Get the p html object that should show what tool is currently selected
+    let currentSelectionParagraph = document.getElementById("current-selection-p")
+
+    // Get every list element from the left side of the screen
+    let selectionParagraphs = getSelectionParagraphs()
 
     // Get the canvas interface (Context)
     let interface = canvas.getContext(`2d`)
@@ -42,6 +48,7 @@ window.addEventListener("load", (event) => {
 
     // Drawing mode, of type DrawingMode (line or curve)
     let drawingMode = DrawingMode.disabled
+    currentSelectionParagraph.textContent = drawingMode
 
     // Scale the canvas so that the accessible portion is always 720p
     canvas.width = 1280
@@ -58,16 +65,13 @@ window.addEventListener("load", (event) => {
     // Start updating the screen
     setInterval(update, 1000/60)
 
-    // MARK: Draw on the screen
-
-    // This block intentionally left blank
-
     // MARK: Events
 
     window.addEventListener(`keydown`, (ev) => {
         switch (ev.key) {
             case `s`:
-                slowClearScreenOn = !slowClearScreenOn
+                // Removed because of ugly trails
+                // slowClearScreenOn = !slowClearScreenOn
                 break
 
             case `c`:
@@ -81,6 +85,7 @@ window.addEventListener("load", (event) => {
                 break
 
             case `2`:
+                interface.strokeStyle = randomColor().string
                 drawingMode = DrawingMode.pencil
                 mouseEvents = []
                 break
@@ -102,6 +107,7 @@ window.addEventListener("load", (event) => {
             default:
                 break
         }
+        updateLabels()
     })
 
     // ClickInside event ends
@@ -110,7 +116,7 @@ window.addEventListener("load", (event) => {
 
         let rect = canvas.getBoundingClientRect(), // abs. size of element
             scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for X
-            scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for Y
+            scaleY = canvas.height / rect.height   // relationship bitmap vs. element for Y
           
         let mouseCoords = new Coordinate((ev.clientX - rect.left) * scaleX,
                                          (ev.clientY - rect.top) * scaleY) 
@@ -135,7 +141,16 @@ window.addEventListener("load", (event) => {
 
             mouseEvents = []
 
-        }else {
+        } else if (drawingMode == DrawingMode.circles && mouseEvents.length == 2) {
+        
+            strokeColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
+            fillColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
+
+            drawCircle(mouseEvents[1], mouseEvents[0], strokeColor, fillColor)
+
+            mouseEvents = []
+
+        } else {
             // If the user has clicked only once or hasn't clicked, don't clear the recent clicks
             return
         }
@@ -245,6 +260,27 @@ window.addEventListener("load", (event) => {
         }
     }
 
+    function drawCircle(start, edge, strokeColor, fillColor) {
+        radius = distance(start, edge)
+
+        interface.strokeStyle = strokeColor.string
+        interface.fillStyle = fillColor.string
+
+        interface.beginPath()
+        interface.arc(start.x, start.y, radius, 0, 360)
+        interface.stroke()
+        interface.fill()
+
+    }
+
+    function updateLabels() {
+        currentSelectionParagraph.textContent = drawingMode
+
+        document.getElementsByClassName("selected")[0].classList.remove("selected")
+
+        selectionParagraphs[drawingMode].classList.add("selected")
+    }
+
 })
 
 function randomIn(x) {
@@ -256,13 +292,37 @@ function randomInRange(y, x) {
     return Math.floor(Math.random() * ((x - y) + 1)) + y
 }
 
+function distance(start, end) {
+    return Math.sqrt( Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2))
+}
+
+function randomColor() {
+    return new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
+}
+
+function getSelectionParagraphs() {
+    let disabled = document.getElementById(`None`)
+    let pencil = document.getElementById(`Pencil`)
+    let lines = document.getElementById(`Line`)
+    let curves = document.getElementById(`Curve`)
+    let circles = document.getElementById(`Circle`)
+
+    return {
+        "None" : disabled,
+        "Pencil" : pencil,
+        "Line" : lines,
+        "Curve" : curves,
+        "Circle" : circles
+    }
+}
+
 // This is a javascript enum moment!
 const DrawingMode = {
-    disabled: `Disabled`,
+    disabled: `None`,
     pencil: `Pencil`,
-    lines: `Lines`,
-    curves: `Curves`,
-    circles: `Circles`
+    lines: `Line`,
+    curves: `Curve`,
+    circles: `Circle`
 }
 
 

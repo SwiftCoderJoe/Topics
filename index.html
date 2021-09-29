@@ -6,25 +6,53 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;900&display=swap" rel="stylesheet"> 
+
     <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
 
     <title>Art</title>
 </head>
 <body>
-    <div class="grid">
-        <div class="left">
-            <p>1: Pencil</p>
-            <p>2: Lines</p>
-            <p>3: Curves</p>
-            <p>4: Particle</p>
-        </div>
-        <canvas id="mainCanvas"></canvas>
-        <div class="right">
+    <div class="vertical switch flex fill">
+
+        <div class="spacer"></div>
+
+        <div class="switch flex">
+
+            <div class="vertical switch flex content text-left">
+                <div class="spacer"></div>
+                <h3>Controls</h3>
+                <p class="selected" id="None">1: Deselect</p>
+                <p id="Pencil">2: Pencil</p>
+                <p id="Line">3: Line</p>
+                <p id="Curve">4: Curve</p>
+                <p id="Circle">5: Circle</p>
+                <p>C: Clear Screen</p>
+                <div class="spacer"></div>
+            </div>
+
+            <div class="spacer"></div>
+
+            <div class="vertical switch flex content text-right">
+                <div class="spacer"></div>
+                <h3>Current Selection</h3>
+                <p id="current-selection-p">Pencil</p>
+                <div class="spacer"></div>
+                <h3>Other Sites</h3>
+                <a href="lttc/lttc.html">LttC</a>
+                <div class="spacer"></div>
+            </div>
 
         </div>
+
+        <div class="spacer"></div>
+
     </div>
     
     
+    <canvas id="canvas"></canvas>
 </body>
 </html>

@@ -1,28 +1,145 @@
 * {
     margin: 0;
-    background: #e0e0e0;
     text-align: center;
 }
 
-div.grid {
-    display: grid;
-
-    height: 100%;
-    width: 100%;
-
-    grid: 10vw 1fr 10vw / 1fr 1fr 1fr;
+body, canvas {
+    background: #e0e0e0;
 }
 
-div.left {
+.selected {
+    background: #03dac5 !important;
+}
+
+div.flex {
+    display: flex;
+}
+
+div.flex.vertical {
+    flex-direction: column;
+}
+
+div.content {
     padding: 20px;
+    gap: 30px;
+
+    /* Use spacers, not justification. */
+    /* justify-content: center; */
+}
+
+div.spacer {
+    flex-grow: 1;
+}
+
+.fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.text-left * {
+    text-align: left;
+}
+
+.text-right * {
+    text-align: right;
+}
+
+p {
+    position: relative;
+
+    font-size: 1vw;
+
+    font-family: "Roboto";
+    font-weight: 500;
+}
+
+h3 {
+    position: relative;
+
+    font-size: 1vw;
+
+    font-family: "Roboto";
+    font-weight: 900;
+}
+
+a {
+    position: relative;
+
+    text-decoration: none;
+    color: black;
+
+    font-size: 1vw;
+
+    font-family: "Roboto";
+    font-weight: 500;
+}
+
+.slider {
+    margin: 20px;
+
+    appearance: none;
+
+    flex-grow: 1;
+    height: 10px;
+
+    border-radius: 10px;
+
+    background: #c3c3c3;
+    outline: none; 
+    opacity: 0.7; 
+
+    transition: all 300ms;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+/* There is still no xplatform way to do this, bruh! */
+.slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #03dac5;
+    cursor: pointer;
+  }
+  
+  .slider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #03dac5;
+    cursor: pointer;
+  }
+
+.content > *:not(div.spacer) {
+    border-radius: 10px;
+
+    padding: 10px;
+
+    background: #e0e0e0;
+    filter: drop-shadow(10px 10px 15px #bebebe)
+            drop-shadow(-10px -10px 15px #ffffff);
+
+    transition: all 300ms;
+}
+
+.content > a:hover {
+    background: #03dac5;
 }
 
 canvas {
-    height: 85vh;
+    border-radius: 30px;
+
+    height: 75vh;
     aspect-ratio: 1.777777;
 
-    filter: drop-shadow(40px 40px 60px #bebebe)
-            drop-shadow(-40px -40px 60px #ffffff);
+    filter: drop-shadow(40px 40px 40px #bebebe)
+            drop-shadow(-40px -40px 40px #ffffff);
 
     margin: 0;
     position: absolute;
@@ -32,8 +149,16 @@ canvas {
 }
 
 @media (max-aspect-ratio: 16/9) {
+    div.flex.vertical.switch {
+        flex-direction: row;
+    }
+
+    div.flex.switch {
+        flex-direction: column;
+    }
+
     canvas {
         height: unset;
-        width: 85vw;
+        width: 75vw;
     }
 }
