@@ -110,9 +110,12 @@ window.addEventListener("load", () => {
         updateLabels()
     })
 
+    // Separated window and canvas here because its useful if the pencil is always enabled/disabled but the other shapes should not always be activated if you click offscreen
     window.addEventListener(`mouseup`, (ev) => {
         mousePressed = false
+    })
 
+    canvas.addEventListener(`mouseup`, (ev) => {
         let rect = canvas.getBoundingClientRect(), // abs. size of element
             scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for X
             scaleY = canvas.height / rect.height   // relationship bitmap vs. element for Y
@@ -184,6 +187,10 @@ window.addEventListener("load", () => {
 
             // I don't need to use the DrawingMode enum here, because the enum is actually just a few differrent string literals that match the IDs, so this is more convinient.
             drawingMode = ev.target.id
+
+            console.log(ev.target.id)
+            console.log(DrawingMode.lines)
+            mouseEvents = []
 
             updateLabels()
         })
