@@ -110,8 +110,7 @@ window.addEventListener("load", () => {
         updateLabels()
     })
 
-    // ClickInside event ends
-    canvas.addEventListener(`mouseup`, (ev) => {
+    window.addEventListener(`mouseup`, (ev) => {
         mousePressed = false
 
         let rect = canvas.getBoundingClientRect(), // abs. size of element
@@ -158,7 +157,6 @@ window.addEventListener("load", () => {
 
     })
 
-    // ClickInside event starts
     window.addEventListener(`mousedown`, (ev) => {
         mousePressed = true
     })
@@ -179,6 +177,17 @@ window.addEventListener("load", () => {
             interface.stroke()
         }
     })
+
+    // Add a click event to every mode selector
+    for (button in selectionParagraphs) {
+        selectionParagraphs[button].addEventListener("mousedown", (ev) => {
+
+            // I don't need to use the DrawingMode enum here, because the enum is actually just a few differrent string literals that match the IDs, so this is more convinient.
+            drawingMode = ev.target.id
+
+            updateLabels()
+        })
+    }
 
     // MARK: Functions
 
@@ -266,6 +275,7 @@ window.addEventListener("load", () => {
         interface.strokeStyle = strokeColor.string
         interface.fillStyle = fillColor.string
 
+        // Draw a circle
         interface.beginPath()
         interface.arc(start.x, start.y, radius, 0, 360)
         interface.stroke()
@@ -276,8 +286,10 @@ window.addEventListener("load", () => {
     function updateLabels() {
         currentSelectionParagraph.textContent = drawingMode
 
+        // Remove the selection from the first (only) element that is selected
         document.getElementsByClassName("selected")[0].classList.remove("selected")
 
+        // Select the new element
         selectionParagraphs[drawingMode].classList.add("selected")
     }
 

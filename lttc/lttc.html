@@ -11,10 +11,19 @@
     <title>LttC.io</title>
 </head>
 <body>
-    <div class="flex">
+    <div class="vertical flex fill">
+        <div class="flex">
+            <div class="spacer"></div>
+            <input type="range" min="1" max="100" value="10" class="slider" id="resolution">
+            <div class="spacer"></div>
+        </div>
         <div class="spacer"></div>
-        <input type="range" min="1" max="100" value="10" class="slider" id="resolution">
-        <div class="spacer"></div>
+        <div class="content flex">
+            <div class="spacer"></div>
+            <h3>Other Sites</h3>
+            <a href="../index.html">Home</a>
+            <div class="spacer"></div>
+        </div>
     </div>
     <canvas id="canvas"></canvas>
 </body>
