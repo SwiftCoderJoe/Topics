@@ -30,6 +30,9 @@ window.addEventListener("load", () => {
     // Get every list element from the left side of the screen
     let selectionParagraphs = getSelectionParagraphs()
 
+    // Get the clear button (C: Clear Screen)
+    let clearButton = document.getElementById(`Clear`)
+
     // Get the canvas interface (Context)
     let interface = canvas.getContext(`2d`)
 
@@ -66,6 +69,38 @@ window.addEventListener("load", () => {
     setInterval(update, 1000/60)
 
     // MARK: Events
+
+    // Gloval events
+
+    window.addEventListener(`mouseup`, (ev) => {
+        mousePressed = false
+
+        for (element of document.getElementsByClassName("pressed")) {
+            element.classList.remove(`pressed`)
+        }
+        
+    })
+
+    window.addEventListener(`mousedown`, (ev) => {
+        mousePressed = true
+    })
+
+    window.addEventListener(`mousemove`, (ev) => {
+        let rect = canvas.getBoundingClientRect(), // abs. size of element
+        scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for X
+        scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for Y
+      
+        previousMousePos = mousePos
+        mousePos = new Coordinate((ev.clientX - rect.left) * scaleX,
+                                  (ev.clientY - rect.top) * scaleY) 
+
+        if (drawingMode == DrawingMode.pencil && mousePressed) {
+            interface.beginPath()
+            interface.moveTo(previousMousePos.x, previousMousePos.y)
+            interface.lineTo(mousePos.x, mousePos.y)
+            interface.stroke()
+        }
+    })
 
     window.addEventListener(`keydown`, (ev) => {
         switch (ev.key) {
@@ -105,10 +140,7 @@ window.addEventListener("load", () => {
         updateLabels()
     })
 
-    // Separated window and canvas here because its useful if the pencil is always enabled/disabled but the other shapes should not always be activated if you click offscreen
-    window.addEventListener(`mouseup`, (ev) => {
-        mousePressed = false
-    })
+    // Element events
 
     canvas.addEventListener(`mouseup`, (ev) => {
         let rect = canvas.getBoundingClientRect(), // abs. size of element
@@ -155,36 +187,24 @@ window.addEventListener("load", () => {
 
     })
 
-    window.addEventListener(`mousedown`, (ev) => {
-        mousePressed = true
-    })
-
-    window.addEventListener(`mousemove`, (ev) => {
-        let rect = canvas.getBoundingClientRect(), // abs. size of element
-        scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for X
-        scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for Y
-      
-        previousMousePos = mousePos
-        mousePos = new Coordinate((ev.clientX - rect.left) * scaleX,
-                                  (ev.clientY - rect.top) * scaleY) 
-
-        if (drawingMode == DrawingMode.pencil && mousePressed) {
-            interface.beginPath()
-            interface.moveTo(previousMousePos.x, previousMousePos.y)
-            interface.lineTo(mousePos.x, mousePos.y)
-            interface.stroke()
-        }
-    })
-
-    // Add a click event to every mode selector
+    // Add a click up and down event to every mode selector
     for (button in selectionParagraphs) {
         selectionParagraphs[button].addEventListener("mousedown", (ev) => {
+            ev.target.classList.add("pressed")
+
             // I don't need to use the DrawingMode enum here, because the enum is actually just a few differrent string literals that match the IDs, so this is more convinient.
             setDrawingMode(ev.target.id)
-
             updateLabels()
         })
     }
+
+    // Get and add a click event to the clear screen button
+    clearButton.addEventListener(`mousedown`, (ev) => {
+        ev.target.classList.add("pressed")
+        
+        interface.fillStyle = new Color(224, 224, 224, 1).string
+        interface.fillRect(0, 0, canvas.width, canvas.height)
+    })
 
     // MARK: Functions
 

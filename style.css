@@ -11,6 +11,12 @@ body, canvas {
     background: #03dac5 !important;
 }
 
+.pressed {
+    filter: unset !important;
+
+    background: #03dac5 !important;
+}
+
 div.flex {
     display: flex;
 }

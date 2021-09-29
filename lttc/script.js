@@ -73,18 +73,23 @@ window.addEventListener(`load`, () => {
     }
 
     function drawLines(resolution) {
-        interface.fillStyle = new Color(0, 255, 255, 1).string
+
         for (let i = 0; i < resolution; i++) {
             let ratio = i / (resolution - 1)
             xpoint = ratio * canvas.width
             ypoint = ratio * canvas.height
 
+            // Top 
             drawLine(new Coordinate(xpoint, 0), mouseCoordinates)
+            // Bottom
             drawLine(new Coordinate(xpoint, canvas.height), mouseCoordinates)
 
+            // Left
             drawLine(new Coordinate(0, ypoint), mouseCoordinates)
+            // Right
             drawLine(new Coordinate(canvas.width, ypoint), mouseCoordinates)
         }
+
     }
 
     function drawLine(start, end) {
