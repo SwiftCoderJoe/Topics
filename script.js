@@ -80,29 +80,24 @@ window.addEventListener("load", () => {
                 break
 
             case `1`:
-                drawingMode = DrawingMode.disabled
-                mouseEvents = []
+                setDrawingMode(DrawingMode.disabled)
                 break
 
             case `2`:
-                interface.strokeStyle = randomColor().string
-                drawingMode = DrawingMode.pencil
-                mouseEvents = []
+                setDrawingMode(DrawingMode.pencil)
                 break
 
             case `3`:
-                drawingMode = DrawingMode.lines
-                mouseEvents = []
+                setDrawingMode(DrawingMode.lines)
                 break
 
             case `4`:
-                drawingMode = DrawingMode.curves
-                mouseEvents = []
+                setDrawingMode(DrawingMode.curves)
                 break
             
             case `5`:
-                drawingMode = DrawingMode.circles
-                mouseEvents = []
+                setDrawingMode(DrawingMode.circles)
+                break
 
             default:
                 break
@@ -184,13 +179,8 @@ window.addEventListener("load", () => {
     // Add a click event to every mode selector
     for (button in selectionParagraphs) {
         selectionParagraphs[button].addEventListener("mousedown", (ev) => {
-
             // I don't need to use the DrawingMode enum here, because the enum is actually just a few differrent string literals that match the IDs, so this is more convinient.
-            drawingMode = ev.target.id
-
-            console.log(ev.target.id)
-            console.log(DrawingMode.lines)
-            mouseEvents = []
+            setDrawingMode(ev.target.id)
 
             updateLabels()
         })
@@ -298,6 +288,19 @@ window.addEventListener("load", () => {
 
         // Select the new element
         selectionParagraphs[drawingMode].classList.add("selected")
+    }
+
+    // Use this so you don't forget to clear mouse events and do selection-specific code
+    function setDrawingMode(mode) {
+        drawingMode = mode
+        mouseEvents = []
+
+        // Selection-specific code
+        switch (mode) {
+            case DrawingMode.pencil:
+                interface.strokeStyle = randomColor().string
+                break;
+        }
     }
 
 })
