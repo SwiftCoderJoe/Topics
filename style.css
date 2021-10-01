@@ -11,6 +11,11 @@ body, canvas {
     background: #03dac5 !important;
 }
 
+/* this is dumb */
+.enabled {
+    background: #03dac5 !important;
+}
+
 .pressed {
     filter: unset !important;
 
