@@ -33,6 +33,9 @@ window.addEventListener("load", () => {
     // Get the clear button (C: Clear Screen)
     let clearButton = document.getElementById(`Clear`)
 
+    // Get the Slow Clear button (S: Slow Clear)
+    let slowClearButton = document.getElementById(`SlowClear`)
+
     // Get the canvas interface (Context)
     let interface = canvas.getContext(`2d`)
 
@@ -105,12 +108,12 @@ window.addEventListener("load", () => {
     window.addEventListener(`keydown`, (ev) => {
         switch (ev.key) {
             case `s`:
-                // Removed because of ugly trails
-                // slowClearScreenOn = !slowClearScreenOn
+                // Previously removed because of ugly trails, reimplemented because of requirements.
+                slowClearScreenOn = !slowClearScreenOn
                 break
 
             case `c`:
-                interface.fillStyle = new Color(224, 224, 224, 1).string
+                interface.fillStyle = new Color(255, 255, 255, 1).string
                 interface.fillRect(0, 0, canvas.width, canvas.height)
                 break
 
@@ -202,8 +205,16 @@ window.addEventListener("load", () => {
     clearButton.addEventListener(`mousedown`, (ev) => {
         ev.target.classList.add("pressed")
         
-        interface.fillStyle = new Color(224, 224, 224, 1).string
+        interface.fillStyle = new Color(255, 255, 255, 1).string
         interface.fillRect(0, 0, canvas.width, canvas.height)
+    })
+
+    slowClearButton.addEventListener(`mousedown`, (ev) => {
+        ev.target.classList.add("pressed")
+
+        slowClearScreenOn = !slowClearScreenOn
+
+        updateLabels()
     })
 
     // MARK: Functions
@@ -217,7 +228,7 @@ window.addEventListener("load", () => {
     }
 
     function slowClearScreen() {
-        interface.fillStyle = new Color(224, 224, 224, 0.02).string
+        interface.fillStyle = new Color(255, 255, 255, 0.01).string
         interface.fillRect(0, 0, canvas.width, canvas.height)
     }
 
@@ -308,6 +319,12 @@ window.addEventListener("load", () => {
 
         // Select the new element
         selectionParagraphs[drawingMode].classList.add("selected")
+
+        if (slowClearScreenOn) {
+            slowClearButton.classList.add("enabled")
+        } else {
+            slowClearButton.classList.remove("enabled")
+        }
     }
 
     // Use this so you don't forget to clear mouse events and do selection-specific code
