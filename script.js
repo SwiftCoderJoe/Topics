@@ -1,6 +1,8 @@
 // Forward: normally I would add a ton of documentation comments but since DocC isn't standard (and this is javascript so types are literally meaningless) I won't.
 // Just regular comments for now.
 
+clamp = (num, min, max) => { return Math.min(Math.max(num, min), max) }
+
 // why are classes not hoisted smh ! also this should definitely be a struct but js has no structs!!1! ! js is a very good and well thought out language
 class Color {
     constructor(r, g, b, a) {
@@ -33,8 +35,14 @@ window.addEventListener("load", () => {
     // Get the clear button (C: Clear Screen)
     let clearButton = document.getElementById(`Clear`)
 
+    // Get the screen refresh toggle (R: Refresh Screen)
+    let screenRefreshToggle = document.getElementById(`RefreshEnabled`)
+
+    // If the screen should be continually refreshed
+    let screenRefreshEnabled = false
+
     // Get the canvas interface (Context)
-    let interface = canvas.getContext(`2d`)
+    let context = canvas.getContext(`2d`)
 
     // Hold the recent mouse position
     let mousePos = new Coordinate(0, 0)
@@ -49,6 +57,9 @@ window.addEventListener("load", () => {
     // If the screen should be slowly cleared by repeatedly drawing a transparent background
     let slowClearScreenOn = false
 
+    // Array filled with objects of everything drawn on the screen
+    let drawnObjects = []
+
     // Drawing mode, of type DrawingMode (line or curve)
     let drawingMode = DrawingMode.disabled
     currentSelectionParagraph.textContent = drawingMode
@@ -58,15 +69,198 @@ window.addEventListener("load", () => {
     canvas.height = 720
 
     // Make lines rounded
-    interface.lineCap = `round`
-    interface.lineJoin = `round`
+    context.lineCap = `round`
+    context.lineJoin = `round`
 
     // Lines are black
-    interface.strokeStyle = `rgb(0, 0, 0)`
-    interface.fillStyle = `rgb(0, 0, 0)`
+    context.strokeStyle = `rgb(0, 0, 0)`
+    context.fillStyle = `rgb(0, 0, 0)`
 
     // Start updating the screen
     setInterval(update, 1000/60)
+
+    // MARK: Classes
+
+    class Line {
+        constructor(start, end, resolution, width, length, twistRate, startColor, endColor) {
+            this.start = start
+            this.end = end
+            this.resolution = resolution
+            this.width = width
+            this.length = length
+            this.twistRate = twistRate
+            this.startColor = startColor
+            this.endColor = endColor
+        }
+    
+        draw() {
+            context.lineWidth = this.width
+    
+            let diff = new Coordinate(this.end.x - this.start.x, this.end.y - this.start.y)
+    
+            // Get angle in radians to make the V-shapes
+            let currentRad = Math.atan2(diff.y, diff.x) - (0.5 * Math.PI)
+    
+            // Color differences
+            let colorDiff = new Color(this.endColor.r - this.startColor.r, this.endColor.g - this.startColor.g, this.endColor.b - this.startColor.b, this.endColor.a - this.startColor.a)
+    
+            for (let i = 0; i < this.resolution; i++) {
+                // Linear distribution
+                let ratio = i/(this.resolution - 1)
+        
+                // The starting coordinates along the linear distribution
+                let x = this.start.x + ratio * diff.x
+                let y = this.start.y + ratio * diff.y
+    
+                // Modulate the angle that the angles come off the line (doesn't actually create realistic twists because of the angle)
+                let rad = 1 * Math.PI/4 + (Math.sin(ratio * this.twistRate) * Math.PI / 4)
+    
+                // First offset point next to the current point along the linear distribution
+                let offsetY1 = y - Math.sin(currentRad - rad) * this.length
+                let offsetX1 = x - Math.cos(currentRad - rad) * this.length
+    
+                // Second set of coordinates
+                let offsetY2 = y + Math.sin(currentRad + rad) * this.length
+                let offsetX2 = x + Math.cos(currentRad + rad) * this.length
+                
+                context.strokeStyle = new Color(this.startColor.r + ratio * colorDiff.r, this.startColor.g + ratio * colorDiff.g, this.startColor.b + ratio * colorDiff.b, this.startColor.a + ratio * colorDiff.a).string
+    
+                // Draw the V
+                context.beginPath()
+                context.moveTo(offsetX1, offsetY1)
+                context.lineTo(x, y)
+                context.lineTo(offsetX2, offsetY2)
+                context.stroke()
+            }
+        }
+    
+    }
+    
+    class Curve {
+    
+        constructor(corner1, middle, corner2, res, color) {
+            this.corner1 = corner1
+            this.middle = middle
+            this.corner2 = corner2
+            this.res = res
+            this.color = color
+        }
+    
+        draw() {
+    
+            // Account for vertical lines that make the shape seem like it should have 2 more lines
+            let res = this.res + 2
+    
+            let side1Diff = new Coordinate(this.corner1.x - this.middle.x, this.corner1.y - this.middle.y)
+            let side2Diff = new Coordinate(this.corner2.x - this.middle.x, this.corner2.y - this.middle.y)
+    
+            for (let i = 0; i < this.res; i++) {
+                let ratio = i/(this.res - 1)
+    
+                let lineStartCoordinate = new Coordinate(this.corner1.x - (ratio * side1Diff.x), this.corner1.y - (ratio * side1Diff.y))
+                let lineEndCoordinate = new Coordinate(this.middle.x + (ratio * side2Diff.x), this.middle.y + (ratio * side2Diff.y))
+    
+                context.strokeStyle = this.color.string
+    
+                context.beginPath()
+                context.moveTo(lineStartCoordinate.x, lineStartCoordinate.y)
+                context.lineTo(lineEndCoordinate.x, lineEndCoordinate.y)
+                context.stroke()
+            }
+        }
+    }
+    
+    // Not completed
+    class Stroke {
+    
+        constructor(startLocation) {
+            this.points = [startLocation]
+        }
+    
+        draw() {
+            context.lineWidth = 2
+
+            if (this.points.length > 1) {
+                let startLocation = this.points[0]
+    
+                context.strokeStyle = new Color(0, 0, 0, 1).string
+        
+                context.beginPath()
+                context.moveTo(startLocation.x, startLocation.y)
+        
+                for (let i = 1; i < this.points.length; i++) {
+                    context.lineTo(this.points[i].x, this.points[i].y)
+                }
+        
+                context.stroke()
+            } else if (this.points.length == 1) {
+                
+            } else {
+                console.error(`Ignored an invalid stroke with points length of ${this.points.length}.`)
+            }
+            
+        }
+    
+    }
+    
+    class Particle {
+        constructor(start, edge, strokeColor, fillColor, vel) {
+            this.location = start
+            this.radius = clamp(distance(start, edge), 0, Math.min(canvas.width / 2 - 1, canvas.height / 2 - 1)) // 719 Because if you have a circle larger than the screen collision breaks
+    
+    
+    
+            this.strokeColor = strokeColor
+            this.fillColor = fillColor
+    
+            this.vel = vel
+        }
+    
+        draw() {
+            this.update()
+    
+            context.strokeStyle = this.strokeColor.string
+            context.fillStyle = this.fillColor.string
+    
+            // Draw a circle
+            context.beginPath()
+            context.arc(this.location.x, this.location.y, this.radius, 0, 360)
+            context.stroke()
+            context.fill()
+    
+        }
+    
+        update() {
+    
+            // Left side
+            if (this.location.x - this.radius < 0) {
+                this.location.x = this.radius
+                this.vel.x = -this.vel.x
+            }
+    
+            // Right side
+            if (this.location.x + this.radius > canvas.width) {
+                this.location.x = canvas.width - this.radius
+                this.vel.x = -this.vel.x
+            }
+
+            // Top
+            if (this.location.y - this.radius < 0) {
+                this.location.y = this.radius
+                this.vel.y = -this.vel.y
+            }
+
+            // Bottom
+            if (this.location.y + this.radius > canvas.height) {
+                this.location.y = canvas.height - this.radius
+                this.vel.y = -this.vel.y
+            }
+    
+    
+            this.location = new Coordinate(this.location.x + this.vel.x, this.location.y + this.vel.y)
+        }
+    
+    }
 
     // MARK: Events
 
@@ -75,6 +269,11 @@ window.addEventListener("load", () => {
     window.addEventListener(`mouseup`, (ev) => {
         mousePressed = false
 
+        // If the mode is pencil and it's drawable we should commit the in-progress Stroke
+        if (drawingMode == DrawingMode.pencil && drawnObjects[drawnObjects.length - 1].points.length <= 2) {
+            drawnObjects.pop()
+        }
+
         for (element of document.getElementsByClassName("pressed")) {
             element.classList.remove(`pressed`)
         }
@@ -82,6 +281,11 @@ window.addEventListener("load", () => {
     })
 
     window.addEventListener(`mousedown`, (ev) => {
+        // If pencil is enabled we should start a Stroke
+        if (drawingMode == DrawingMode.pencil) {
+            drawnObjects.push(new Stroke(mousePos))
+        }
+
         mousePressed = true
     })
 
@@ -95,10 +299,7 @@ window.addEventListener("load", () => {
                                   (ev.clientY - rect.top) * scaleY) 
 
         if (drawingMode == DrawingMode.pencil && mousePressed) {
-            interface.beginPath()
-            interface.moveTo(previousMousePos.x, previousMousePos.y)
-            interface.lineTo(mousePos.x, mousePos.y)
-            interface.stroke()
+            drawnObjects[drawnObjects.length - 1].points.push(mousePos)
         }
     })
 
@@ -110,8 +311,7 @@ window.addEventListener("load", () => {
                 break
 
             case `c`:
-                interface.fillStyle = new Color(224, 224, 224, 1).string
-                interface.fillRect(0, 0, canvas.width, canvas.height)
+                destroyObjects()
                 break
 
             case `1`:
@@ -133,6 +333,9 @@ window.addEventListener("load", () => {
             case `5`:
                 setDrawingMode(DrawingMode.circles)
                 break
+
+            case `r`:
+                screenRefreshEnabled = !screenRefreshEnabled
 
             default:
                 break
@@ -158,7 +361,7 @@ window.addEventListener("load", () => {
 
             startColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
             endColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
-            drawVShape(mouseEvents[0], mouseEvents[1], randomIn(800), 2, randomInRange(10, 30), 0, startColor, endColor)
+            drawnObjects.push( new Line(mouseEvents[0], mouseEvents[1], randomIn(800), 2, randomInRange(10, 30), 0, startColor, endColor) )
 
             mouseEvents = []
 
@@ -166,7 +369,7 @@ window.addEventListener("load", () => {
         } else if (drawingMode == DrawingMode.curves && mouseEvents.length == 3) {
 
             color = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
-            drawCurve(mouseEvents[0], mouseEvents[1], mouseEvents[2], randomIn(200), color)
+            drawnObjects.push( new Curve(mouseEvents[0], mouseEvents[1], mouseEvents[2], randomIn(200), color) )
 
             mouseEvents = []
 
@@ -174,8 +377,9 @@ window.addEventListener("load", () => {
         
             strokeColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
             fillColor = new Color(randomIn(255), randomIn(255), randomIn(255), Math.random())
+            velocity = new Coordinate(Math.random() * 6 - 3, Math.random() * 6 - 3)
 
-            drawCircle(mouseEvents[1], mouseEvents[0], strokeColor, fillColor)
+            drawnObjects.push( new Particle(mouseEvents[1], mouseEvents[0], strokeColor, fillColor, velocity) )
 
             mouseEvents = []
 
@@ -202,102 +406,58 @@ window.addEventListener("load", () => {
     clearButton.addEventListener(`mousedown`, (ev) => {
         ev.target.classList.add("pressed")
         
-        interface.fillStyle = new Color(224, 224, 224, 1).string
-        interface.fillRect(0, 0, canvas.width, canvas.height)
+        destroyObjects()
+    })
+
+    screenRefreshToggle.addEventListener(`mousedown`, (ev) => {
+        ev.target.classList.add("pressed")
+
+        screenRefreshEnabled = !screenRefreshEnabled
+
+        updateLabels()
     })
 
     // MARK: Functions
 
     function update() {
 
-        if (slowClearScreenOn) {
-            slowClearScreen()
+        if (screenRefreshEnabled) {
+            clearScreen()
+
+            /*if (slowClearScreenOn) {
+                slowClearScreen()
+            }*/
+
+            drawObjects()
+        }
+        
+    }
+
+    function drawObjects() {
+        for (object of drawnObjects) {
+            object.draw()
+        } 
+    }
+
+    function destroyObjects() {
+
+        // Standard flow is else block
+        if (drawingMode == DrawingMode.pencil && mousePressed){
+            drawnObjects = [new Stroke(mousePos)]
+        } else {
+            drawnObjects = []
         }
         
     }
 
     function slowClearScreen() {
-        interface.fillStyle = new Color(224, 224, 224, 0.02).string
-        interface.fillRect(0, 0, canvas.width, canvas.height)
+        context.fillStyle = new Color(224, 224, 224, 0.02).string
+        context.fillRect(0, 0, canvas.width, canvas.height)
     }
 
-    function drawCurve(corner1, middle, corner2, res, color) {
-
-        // Account for vertical lines that make the shape seem like it should have 2 more lines
-        res = res + 2
-
-        side1Diff = new Coordinate(corner1.x - middle.x, corner1.y - middle.y)
-        side2Diff = new Coordinate(corner2.x - middle.x, corner2.y - middle.y)
-
-        for (let i = 0; i < res; i++) {
-            let ratio = i/(res - 1)
-
-            lineStartCoordinate = new Coordinate(corner1.x - (ratio * side1Diff.x), corner1.y - (ratio * side1Diff.y))
-            lineEndCoordinate = new Coordinate(middle.x + (ratio * side2Diff.x), middle.y + (ratio * side2Diff.y))
-
-            interface.strokeStyle = color.string
-
-            interface.beginPath()
-            interface.moveTo(lineStartCoordinate.x, lineStartCoordinate.y)
-            interface.lineTo(lineEndCoordinate.x, lineEndCoordinate.y)
-            interface.stroke()
-        }
-    }
-
-    // This function signature is absolutely insane and should use more objects. javascriopt moment!!!
-    function drawVShape(startCoord, endCoord, res, width, length, twistRate, startColor, endColor) {
-
-        let diff = new Coordinate(endCoord.x - startCoord.x, endCoord.y - startCoord.y)
-
-        // Get angle in radians to make the V-shapes
-        let currentRad = Math.atan2(diff.y, diff.x) - (0.5 * Math.PI)
-
-        // Color differences
-        let colorDiff = new Color(endColor.r - startColor.r, endColor.g - startColor.g, endColor.b - startColor.b, endColor.a - startColor.a)
-
-        for (let i = 0; i < res; i++) {
-            // Linear distribution
-            let ratio = i/(res - 1)
-    
-            // The starting coordinates along the linear distribution
-            x = startCoord.x + ratio * diff.x
-            y = startCoord.y + ratio * diff.y
-
-            // Modulate the angle that the angles come off the line (doesn't actually create realistic twists because of the angle)
-            let rad = 1 * Math.PI/4 + (Math.sin(ratio * twistRate) * Math.PI / 4)
-
-            // First offset point next to the current point along the linear distribution
-            let offsetY1 = y - Math.sin(currentRad - rad) * length
-            let offsetX1 = x - Math.cos(currentRad - rad) * length
-
-            // Second set of coordinates
-            let offsetY2 = y + Math.sin(currentRad + rad) * length
-            let offsetX2 = x + Math.cos(currentRad + rad) * length
-            
-            interface.strokeStyle = new Color(startColor.r + ratio * colorDiff.r, startColor.g + ratio * colorDiff.g, startColor.b + ratio * colorDiff.b, startColor.a + ratio * colorDiff.a).string
-            interface.lineWidth = width
-
-            // Draw the V
-            interface.beginPath()
-            interface.moveTo(offsetX1, offsetY1)
-            interface.lineTo(x, y)
-            interface.lineTo(offsetX2, offsetY2)
-            interface.stroke()
-        }
-    }
-
-    function drawCircle(start, edge, strokeColor, fillColor) {
-        radius = distance(start, edge)
-
-        interface.strokeStyle = strokeColor.string
-        interface.fillStyle = fillColor.string
-
-        // Draw a circle
-        interface.beginPath()
-        interface.arc(start.x, start.y, radius, 0, 360)
-        interface.stroke()
-        interface.fill()
-
+    function clearScreen() {
+        context.fillStyle = new Color(224, 224, 224, 1).string
+        context.fillRect(0, 0, canvas.width, canvas.height)
     }
 
     function updateLabels() {
@@ -308,6 +468,12 @@ window.addEventListener("load", () => {
 
         // Select the new element
         selectionParagraphs[drawingMode].classList.add("selected")
+
+        if (screenRefreshEnabled) {
+            screenRefreshToggle.classList.add("enabled")
+        } else {
+            screenRefreshToggle.classList.remove("enabled")
+        }
     }
 
     // Use this so you don't forget to clear mouse events and do selection-specific code
@@ -318,7 +484,8 @@ window.addEventListener("load", () => {
         // Selection-specific code
         switch (mode) {
             case DrawingMode.pencil:
-                interface.strokeStyle = randomColor().string
+                // FIXME
+                context.strokeStyle = randomColor().string
                 break;
         }
     }
